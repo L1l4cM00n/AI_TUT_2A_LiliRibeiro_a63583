@@ -5,10 +5,12 @@ public class Bot : MonoBehaviour
 {
     NavMeshAgent agent;
     public GameObject target;
+    private Drive ds;
 
     void Start()
     {
         agent = this.GetComponent<NavMeshAgent>();
+        ds= target.GetComponent<Drive>();
     }
 
     void Seek(Vector3 location)
@@ -25,26 +27,29 @@ public class Bot : MonoBehaviour
     void Pursue()
     {
         Vector3 targetDir = target.transform.position - this.transform.position;
-
-        float targetSpeed = Mathf.Abs(target.GetComponent<Drive>().currentSpeed);
-
-        // Se o alvo está parado, ou está à frente a vir na minha direção, basta fazer Seek
+        
         float relativeHeading = Vector3.Angle(this.transform.forward, target.transform.forward);
         float toTarget = Vector3.Angle(this.transform.forward, targetDir);
 
-        if ((toTarget > 90 && relativeHeading < 20) || targetSpeed < 0.01f)
+        if ((toTarget > 90 && relativeHeading < 20) || ds.currentSpeed < 0.01f)
         {
             Seek(target.transform.position);
             return;
         }
-
-        // Quanto tempo vou demorar a chegar, e onde o alvo vai estar nesse tempo
-        float lookAhead = targetDir.magnitude / (agent.speed + targetSpeed);
+        
+        float lookAhead = targetDir.magnitude / (agent.speed + ds.currentSpeed);
         Seek(target.transform.position + target.transform.forward * lookAhead);
+    }
+
+    void Evade()
+    {
+        Vector3 targetDir = target.transform.position - this.transform.position;
+        float lookAhead = targetDir.magnitude / (agent.speed + ds.currentSpeed);
+        Flee(target.transform.position + target.transform.forward * lookAhead);
     }
 
     void Update()
     {
-        Pursue();
+        Evade();
     }
 }
